@@ -117,7 +117,78 @@ gcloud run deploy --set-env-vars SECRET_KEY="your-secret-key",DEBUG=False,METEOM
 1. Vercel Dashboard → Project → Settings → Environment Variables
 2. Add variables for Production, Preview, and Development environments
 
-### Option 7: VPS/Self-Hosted
+### Option 7: Microsoft Azure App Service
+
+**Prerequisites:**
+- Azure account with an active subscription
+- Azure CLI installed locally (optional but recommended)
+- PostgreSQL database (Azure Database for PostgreSQL or external)
+
+**Step 1: Create Azure App Service**
+1. Log into Azure Portal
+2. Create a new App Service:
+   ```bash
+   # Using Azure CLI
+   az webapp create --resource-group myResourceGroup --plan myAppServicePlan --name your-app-name --runtime "PYTHON|3.11"
+   ```
+   Or use the Azure Portal to create manually
+
+**Step 2: Set Environment Variables in Azure**
+1. Go to App Service → Configuration → Application Settings
+2. Add these environment variables:
+   ```
+   SECRET_KEY = your-generated-secret-key
+   DEBUG = False
+   ALLOWED_HOSTS = your-app-name.azurewebsites.net
+   DATABASE_URL = postgresql://username:password@host:port/database
+   FRONTEND_URL = https://your-frontend-domain.com
+   METEOMATICS_USERNAME = your-username (optional)
+   METEOMATICS_PASSWORD = your-password (optional)
+   DJANGO_SUPERUSER_USERNAME = admin (optional)
+   DJANGO_SUPERUSER_EMAIL = admin@example.com (optional)
+   DJANGO_SUPERUSER_PASSWORD = secure-password (optional)
+   ```
+
+**Step 3: Configure Deployment**
+1. Set up GitHub deployment:
+   - App Service → Deployment Center
+   - Choose GitHub as source
+   - Authorize and select repository
+   - Configure build provider (GitHub Actions recommended)
+
+2. Or deploy via Azure CLI:
+   ```bash
+   az webapp deployment source config --name your-app-name --resource-group myResourceGroup --repo-url https://github.com/yourusername/yourrepo.git --branch main
+   ```
+
+**Step 4: Configure Startup Command**
+In Azure Portal → App Service → Configuration → General Settings:
+```
+Startup Command: python startup.py && gunicorn --bind=0.0.0.0 --workers=4 backend.wsgi
+```
+
+**Step 5: Database Setup**
+1. Create Azure Database for PostgreSQL:
+   ```bash
+   az postgres server create --resource-group myResourceGroup --name mypostgresserver --admin-user myadmin --admin-password mypassword --sku-name GP_Gen5_2
+   ```
+
+2. Create database:
+   ```bash
+   az postgres db create --resource-group myResourceGroup --server-name mypostgresserver --name mydatabase
+   ```
+
+3. Configure firewall to allow Azure services:
+   ```bash
+   az postgres server firewall-rule create --resource-group myResourceGroup --server mypostgresserver --name AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+   ```
+
+**Step 6: Enable Application Insights (Optional)**
+```bash
+az monitor app-insights component create --app your-app-name --location eastus --resource-group myResourceGroup
+```
+
+### Option 8: VPS/Self-Hosted
 
 **Option A: Using systemd environment file:**
 1. Create `/etc/environment` or service-specific env file:

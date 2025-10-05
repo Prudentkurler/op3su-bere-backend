@@ -6,3 +6,7 @@ requests
 pytz
 geographiclib
 python-dotenv
+gunicorn
+whitenoise
+psycopg2-binary
+dj-database-url
