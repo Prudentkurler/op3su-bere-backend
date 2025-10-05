@@ -16,8 +16,25 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+def api_status(request):
+    """Simple API status endpoint for root path"""
+    return JsonResponse({
+        'status': 'operational',
+        'message': 'Op3su Backend API is running successfully on Azure!',
+        'endpoints': {
+            'admin': '/admin/',
+            'weather_analysis': '/api/weather/',
+            'geospatial_segmentation': '/api/geospatial-segmentation/',
+            'user_auth': '/api/auth/'
+        },
+        'version': '1.0.0'
+    })
 
 urlpatterns = [
+    path('', api_status, name='api_status'),
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
     path('api/', include('api.urls')),
